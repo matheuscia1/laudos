@@ -452,45 +452,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
             
     container.innerHTML += `
-        <div class="requisicao-card">
-            <div>
-                <p><strong>Paciente:</strong> ${r.paciente}</p>
-                <p>
+        
+    <div class="requisicao-card requisicao-card-linha card-expansivel">
+
+        <div class="requisicao-header">
+            
+            <!-- LINHA PRINCIPAL (sempre visível) -->
+            <div class="requisicao-linha resumo">
+                <span><strong>Paciente:</strong> ${r.paciente}</span>
+
+                <span>
                     <strong>Tipo:</strong>
                     ${r.tipo}${r.subtipo ? ' - ' + r.subtipo : ''}
                     ${
-                          r.tipo === 'TC'
-                          ? (
-                                r.contraste
-                                    ? ' <span class="contraste">com contraste</span>'
-                                    : ' sem contraste'
-                            )
+                        r.tipo === 'TC'
+                            ? (r.contraste
+                                ? ' <span class="contraste">com contraste</span>'
+                                : ' sem contraste')
                             : ''
                     }
-                </p>
+                </span>
 
-                <p><strong>Solicitante:</strong> Dr. ${r.solicitante || '---'}</p>
-
-                <p class="data-info">
+                <span class="data-info">
                     <strong>Solicitado em:</strong>
                     ${formatarData(r.dataSolicitacao)}
                     ${r.urgente ? ' - <span class="urgente">URGENTE</span>' : ''}
-                </p>
+                </span>
 
-                ${
-                    r.dataInicioExame
-                        ? `<p class="data-info">
-                            <strong>Em exame desde:</strong>
-                            ${formatarData(r.dataInicioExame)}
-                           </p>`
-                        : ''
-                }
+                    <i class="icone-expansivel"></i>
 
+            </div>
+
+        </div>
+
+        <!-- CONTEÚDO EXPANDIDO -->
+        <div class="requisicao-detalhes">
+            <div class="requisicao-linha detalhes">
+                <span><strong>Solicitante:</strong> Dr. ${r.solicitante || '---'}</span>
+
+                
+                    <span style="flex-basis: 100%;">
+                        <strong>Indicação:</strong> ${r.descricao || '—'}
+                    </span>
+                
+                <!-- futuras infos aqui -->
+            </div>
+
+            
+        </div>
+
+
+            <div class="status-linha">
                 ${statusLabel}
             </div>
-           
-        </div>`;
+
+
+        </div>
+    `;
+
+                
+
         });
+
+              
     };
 
 
@@ -553,8 +577,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="acoes-minhas">
-                    <button class="btn-editar" disabled>Editar</button>
-                    <button class="btn-excluir" disabled>Excluir</button>
+
+                <button class="btn-editar" disabled>Editar</button>
+
+                    ${
+                        r.status === 'solicitado'
+                            ? `
+                                <button class="btn-excluir" onclick="excluirRequisicao(${i})">
+                                    Excluir
+                                </button>
+                            `
+                            : `
+                                <button class="btn-excluir" disabled>
+                                    Excluir
+                                </button>
+                            `
+                    }
                 </div>
             </div>
         `;
@@ -838,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRequisicoes();
         renderMinhasRequisicoes();
 
-        showToast('Exame cancelado.', 'info');
+        showToast('Exame cancelado.', 'warning');
         });
     };
 
@@ -1033,6 +1071,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+    // ===== EXCLUIR REQUISIÇÃO (somente se solicitado) =====
+    window.excluirRequisicao = (index) => {
+    confirmAction('Deseja excluir esta solicitação?', () => {
+
+        // Segurança extra (regra de negócio)
+        if (requisicoes[index].status !== 'solicitado') {
+            showToast(
+                'Só é possível excluir exames com status "Solicitado".',
+                'warning'
+            );
+            return;
+        }
+
+        requisicoes.splice(index, 1);
+
+        localStorage.setItem(
+            'requisicoes',
+            JSON.stringify(requisicoes)
+        );
+
+        renderMinhasRequisicoes();
+        renderRequisicoes();
+        renderExamesRealizar();
+
+        showToast('Solicitação excluída', 'warning');
+        });
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /* =====================================================
        7️⃣ EVENTOS / HANDLERS
     ===================================================== */
@@ -1164,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     : null,
             setor: setorAtual,
             solicitante: MEDICO_SOLICITANTE_PADRAO,
+            descricao: descricao.value,
             urgente: urgenteToggle.checked,
             status: 'solicitado',
             dataSolicitacao: new Date().toISOString(),
@@ -1477,6 +1560,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
+    // ===== CANCELAR FORMULÁRIO DE LAUDO (NÃO cancela o exame) =====
+    document.getElementById('cancelar-laudo')?.addEventListener('click', () => {
+    const index = parseInt(
+        document.getElementById('requisicao-id').value
+    );
+
+    // 🔙 Se estava apenas em edição/início de exame, volta para solicitado
+    if (requisicoes[index]?.status === 'em_exame') {
+        requisicoes[index].status = 'solicitado';
+        requisicoes[index].dataInicioExame = null;
+    }
+
+    localStorage.setItem('requisicoes', JSON.stringify(requisicoes));
+
+    // Fecha formulário
+    document.getElementById('realizar-exame-section').style.display = 'none';
+    document.getElementById('form-laudo').reset();
+
+    // Atualiza telas
+    renderExamesRealizar();
+    renderRequisicoes();
+    renderMinhasRequisicoes();
+
+    location.hash = 'pendentes';
+});
+
+
+
+
+// ===== CARD EXPANSÍVEL =====
+
+const requisicoesContainer = document.getElementById('requisicoes-container');
+
+if (requisicoesContainer) {
+    requisicoesContainer.addEventListener('click', (e) => {
+
+        // ⛔ ignora cliques em ações internas
+        if (e.target.closest('button, a')) return;
+
+        const card = e.target.closest('.card-expansivel');
+        if (!card) return;
+
+        const jaAberto = card.classList.contains('aberto');
+
+        // Fecha todos
+        document
+            .querySelectorAll('.card-expansivel.aberto')
+            .forEach(c => c.classList.remove('aberto'));
+
+        // Abre apenas se não estava aberto
+        if (!jaAberto) {
+            card.classList.add('aberto');
+        }
+    });
+};
 
 
 

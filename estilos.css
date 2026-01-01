@@ -612,7 +612,7 @@ button:hover {
     border-left: 4px solid var(--primary);
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     transition: all 0.2s;
 }
 
@@ -810,8 +810,18 @@ button:hover {
 .acoes-minhas button {
     padding: 4px 10px;
     font-size: 0.75rem;
+}
+
+/* Botão desabilitado */
+.acoes-minhas button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* Botão habilitado */
+.acoes-minhas button:not(:disabled) {
+    opacity: 1;
+    cursor: pointer;
 }
 
 
@@ -1242,4 +1252,194 @@ button:hover {
     .laudos-filtros.aberto {
         display: grid;
     }
+}
+
+
+
+/* ===== REQUISIÇÕES EM LINHA ÚNICA ===== */
+
+.requisicao-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem 2rem; /* ↓ vertical | → horizontal */
+    flex-wrap: wrap;
+}
+
+.requisicao-linha span {
+    white-space: normal;
+    max-width: max-content;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.requisicao-linha strong {
+    font-weight: 600;
+}
+
+/* Badge sempre na linha de baixo */
+.requisicao-card .badge-status {
+    margin-top: 0.4rem;
+}
+
+@media (max-width: 900px) {
+    .requisicao-linha {
+        flex-wrap: wrap;
+        gap: 0.5rem 1.2rem;
+    }
+}
+
+/* ===== LINHA EXCLUSIVA PARA STATUS ===== */
+
+.status-linha {
+    margin-top: 0.4rem;
+}
+
+
+
+
+/* Garantir cores semânticas dentro da linha */
+.requisicao-linha .urgente {
+    color: red !important;
+    font-weight: bold;
+}
+
+.requisicao-linha .contraste {
+    color: #f39c12 !important;
+    font-weight: bold;
+}
+
+
+
+
+
+.requisicao-linha .data-info {
+    margin-top: 0;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+
+
+
+
+
+
+/* ===== CARD EXPANSÍVEL ===== */
+
+.card-expansivel {
+    flex-direction: column;
+}
+
+.requisicao-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+/* Setinha */
+.toggle-card {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #aaa;
+    padding: 4px;
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.toggle-card:hover {
+    color: var(--primary);
+}
+
+/* Conteúdo oculto */
+.requisicao-detalhes {
+    display: none;
+    margin-top: 0.3rem;
+}
+
+/* Estado aberto */
+.card-expansivel.aberto .requisicao-detalhes {
+    display: block;
+}
+
+/* Rotação da seta */
+.card-expansivel.aberto .toggle-card {
+    transform: rotate(180deg);
+}
+
+
+.requisicao-detalhes,
+.status-linha {
+    margin-top: 0.75rem;
+}
+
+.status-linha {
+    display: flex;
+    align-items: center;
+}
+
+.status-linha {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+
+
+.requisicao-linha span {
+    line-height: 1.3;
+}
+
+
+
+
+
+.requisicao-card {
+    position: relative; /* necessário para o ícone absoluto */
+    cursor: pointer;
+}
+
+/* Ícone de expansão */
+.icone-expansivel {
+    position: absolute;
+    right: 1rem;
+    top: 1.2rem;
+
+    width: 14px;
+    height: 14px;
+
+    border-right: 2px solid #999;
+    border-bottom: 2px solid #999;
+
+    transform: rotate(45deg); /* setas para baixo */
+    transition: transform 0.25s ease, opacity 0.2s;
+    opacity: 0.6;
+}
+
+.icone-expansivel {
+    pointer-events: none;
+}
+
+/* Estado aberto */
+.card-expansivel.aberto .icone-expansivel {
+    transform: rotate(-135deg); /* setas para cima */
+    opacity: 0.9;
+}
+
+
+
+
+.requisicao-detalhes strong {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.requisicao-detalhes span {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.requisicao-detalhes .requisicao-linha span {
+    max-width: 100%;
 }
